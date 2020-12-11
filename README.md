@@ -1,7 +1,7 @@
 build in Ubuntu 18.04.5 LTS
 
 # hackrf-host
-sudo apt-get install build-essential libusb-1.0-0-dev pkg-config libfftw3-dev  
+sudo apt-get install build-essential cmake libusb-1.0-0-dev pkg-config libfftw3-dev   
 git clone https://github.com/mossmann/hackrf  
 wget https://github.com/mossmann/hackrf/releases/download/v2018.01.1/hackrf-2018.01.1.tar.xz  
 cmake -DCMAKE_INSTALL_PREFIX=$PWD/../../../run -DUDEV_RULES_PATH=$PWD/../../../run/etc/udev/rules.d/ ../  
