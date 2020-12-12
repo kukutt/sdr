@@ -7,4 +7,4 @@ echo work dir [$homePath] [$workPath]
 export PATH=$homePath/run/bin:$PATH
 export LD_LIBRARY_PATH=$homePath/run/lib:$LD_LIBRARY_PATH
 export PKG_CONFIG_PATH=$homePath/run/lib/pkgconfig:$PKG_CONFIG_PATH
-export PYTHONPATH=$PYTHONPATH:$homePath/run/lib/python3/dist-packages/:$homePath/run/lib/python3.6/dist-packages/
+export PYTHONPATH=$PYTHONPATH:$homePath/run/lib/python3/dist-packages/:$homePath/run/lib/python3.6/dist-packages/:$homePath/run/lib/python2.7/dist-packages/
