@@ -27,17 +27,34 @@ int hf_close(hackrf_device* device){
 }
 
 int hf_rx_callback(hackrf_transfer* transfer) {
-    printf("[aa]%d %d %d\r\n", transfer->valid_length, transfer->buffer[0], transfer->buffer[1]);
+    printf("[rx]%d %d %d\r\n", transfer->valid_length, transfer->buffer[0], transfer->buffer[1]);
     return 0;
 }
 
 int hf_rx(hackrf_device* device){
-    printf("hf_rx:0\r\n");
     hackrf_set_freq(device, 20000);
     hackrf_start_rx(device, hf_rx_callback, NULL);
-    printf("hf_rx:1\r\n");
     sleep(10);
     hackrf_stop_rx(device);
+
+    return 0;
+}
+
+FILE *iqfile;
+int hf_tx_callback(hackrf_transfer* transfer) {
+    fread(transfer->buffer, transfer->valid_length, 1, iqfile);
+    return 0;
+}
+
+int hf_tx(hackrf_device* device){
+    iqfile = fopen("hello.iq", "rb");
+    hackrf_set_txvga_gain(device, 20);
+    hackrf_set_sample_rate(device, 2000000);
+    hackrf_set_freq(device, 100400000);
+    hackrf_start_tx(device, hf_tx_callback, NULL);
+    sleep(10);
+    hackrf_stop_tx(device);
+    fclose(iqfile);
 
     return 0;
 }
@@ -47,7 +64,7 @@ int main(int argc, char **argv){
     hackrf_device* device;
     printf("hackrf_init:%d\r\n", hackrf_init());
     hf_open(&device);
-    hf_rx(device);
+    hf_tx(device);
     hf_close(device);
     printf("hackrf_exit:%d\r\n", hackrf_exit());
 
