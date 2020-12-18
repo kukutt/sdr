@@ -10,7 +10,9 @@ void modulation(float * input, unsigned int input_len, float * output, unsigned 
 #define WAV_CHANNEL 2
 #define WAV_BITPERBYTE 2
 #define WAV_SAMPLE_RATE 44100
+//#define WAV_SAMPLE_RATE 2000000
 
+//#define HACKRF_SAMPLE_RATE 44100
 #define HACKRF_SAMPLE_RATE 2000000
 
 #define IQ_DSP_GAIN 0.9f
@@ -41,12 +43,9 @@ int wav2iq(char *wav_file, char *iq_file){
 
     printf("len = %ld\r\n", sizeof(float));
     pPCM = (float*)malloc(num_samples*IQ_MUL*sizeof(float));
-
-    float a = (float)HACKRF_SAMPLE_RATE / (float)WAV_SAMPLE_RATE;
-    printf("%f\r\n", a);
-    pTX_buf = malloc(a*num_samples*4); 
-    pResampleData = (float*)malloc(HACKRF_SAMPLE_RATE*IQ_DEAL_S*sizeof(float)); 
-    pIQ_buf = (float*)malloc(HACKRF_SAMPLE_RATE*IQ_DEAL_S*sizeof(float));
+    float aaaa = (float)HACKRF_SAMPLE_RATE / (float)WAV_SAMPLE_RATE;
+    printf("%f\r\n", aaaa);
+    pTX_buf = malloc(aaaa*num_samples*4); 
 
     short data_in_channel;
     float data_f;
@@ -57,7 +56,8 @@ int wav2iq(char *wav_file, char *iq_file){
         memcpy((float*)pPCM+i,&data_f,4);
     }
     fclose(p);
-#if 1 
+
+#if 0
     for (i = 0; i < 160; i++) {
         printf("%f ", pPCM[i]);
     }
@@ -66,6 +66,8 @@ int wav2iq(char *wav_file, char *iq_file){
 
 #if 1
     int t_offset = 0;
+    pResampleData = (float*)malloc(HACKRF_SAMPLE_RATE*IQ_DEAL_S*sizeof(float)); 
+    pIQ_buf = (float*)malloc(HACKRF_SAMPLE_RATE*IQ_DEAL_S*sizeof(float));
     for(i=0;i<num_samples;i+=(IQ_DEAL_S*WAV_SAMPLE_RATE))
     {
         printf("%d/%d\r\n", i, num_samples);
@@ -74,19 +76,22 @@ int wav2iq(char *wav_file, char *iq_file){
         }
 	    interpolation(pPCM+i, WAV_SAMPLE_RATE*IQ_DEAL_S, pResampleData, HACKRF_SAMPLE_RATE*IQ_DEAL_S, last_samples);    
 	    modulation(pResampleData, HACKRF_SAMPLE_RATE*IQ_DEAL_S, pIQ_buf,0);
-           
         for(j=0;j<2*(HACKRF_SAMPLE_RATE*IQ_DEAL_S);j++){
 		    pTX_buf[t_offset+j] =(unsigned char)(pIQ_buf[j]*127.0);
         }
 	    t_offset += 2*(HACKRF_SAMPLE_RATE*10);
     }
+    //free(pIQ_buf);
+    //free(pResampleData);
 #endif
-#if 1 
+
+#if 0 
     for (i = 0; i < 160; i++) {
         printf("%02x ", pTX_buf[i]);
     }
     printf("\r\n");
 #endif
+    printf("t_offset=%d\r\n", t_offset);
     p=fopen(iq_file,"wb+");
     fwrite(pTX_buf, t_offset, 1, p);
     fclose(p);
