@@ -9,8 +9,8 @@ void modulation(float * input, unsigned int input_len, float * output, unsigned 
 
 #define WAV_CHANNEL 2
 #define WAV_BITPERBYTE 2
-#define WAV_SAMPLE_RATE 44100
-//#define WAV_SAMPLE_RATE 2000000
+//#define WAV_SAMPLE_RATE 44100
+#define WAV_SAMPLE_RATE 2000000
 
 //#define HACKRF_SAMPLE_RATE 44100
 #define HACKRF_SAMPLE_RATE 2000000

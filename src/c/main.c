@@ -50,9 +50,9 @@ int hf_tx(hackrf_device* device){
     iqfile = fopen("hello.iq", "rb");
     hackrf_set_txvga_gain(device, 20);
     hackrf_set_sample_rate(device, 2000000);
-    hackrf_set_freq(device, 100400000);
+    hackrf_set_freq(device, 88500000);
     hackrf_start_tx(device, hf_tx_callback, NULL);
-    sleep(10);
+    sleep(100);
     hackrf_stop_tx(device);
     fclose(iqfile);
 
