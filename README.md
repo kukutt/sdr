@@ -35,3 +35,7 @@ cmake -DCMAKE_INSTALL_PREFIX=$PWD/../../run ../
 # test
 hackrf_transfer -r /dev/stdout -f 315000000 -a 1 -g 16 -l 32 -s 8000000  
 
+# rtl-sdr
+git clone https://github.com/antirez/dump1090.git
+sudo apt install build-essential cmake libusb-1.0-0-dev  pkg-config librtlsdr-dev
+./dump1090 --interactive --net
