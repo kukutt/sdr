@@ -49,8 +49,8 @@ timeout 2 rtl_fm -d 0 -g 49 -M usb -s 32000  -r 32000 -F 1 -f 50.293M outfile.ra
 timeout 2 rtl_fm -M wbfm -s 480000 -r 48000 -f 100.0M outfile.raw
 rtl_fm -M wbfm -s 480000 -r 48000 -f 73.3M - | ffplay -f s16le -ar 48000 -i -
 rtl_fm -M wbfm -s 480000 -r 48000 -f 73.3M - | hexdump -C
+rtl_fm -M raw -s 480000 -r 48000 -f 73.3M - | hexdump -C
 
 ## demo
 git clone https://github.com/antirez/dump1090.git
-sudo apt install build-essential cmake libusb-1.0-0-dev  pkg-config librtlsdr-dev
 ./dump1090 --interactive --net
