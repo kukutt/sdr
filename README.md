@@ -36,9 +36,19 @@ cmake -DCMAKE_INSTALL_PREFIX=$PWD/../../run ../
 hackrf_transfer -r /dev/stdout -f 315000000 -a 1 -g 16 -l 32 -s 8000000  
 
 # rtl-sdr
+sudo apt install build-essential cmake libusb-1.0-0-dev  pkg-config
 git clone https://github.com/osmocom/rtl-sdr
 git clone git://git.osmocom.org/rtl-sdr
 cmake -DCMAKE_INSTALL_PREFIX=$PWD/../../run ../
+sudo modprobe -r dvb_usb_rtl28xxu
+sudo cp ./pack/blacklist_rtlsdr.conf /etc/modprobe.d/
+sudo cp ./rtl-sdr-0.6.0/rtl-sdr.rules /etc/udev/rules.d/
+ 
+## fm test
+timeout 2 rtl_fm -d 0 -g 49 -M usb -s 32000  -r 32000 -F 1 -f 50.293M outfile.raw
+timeout 2 rtl_fm -M wbfm -s 480000 -r 48000 -f 100.0M outfile.raw
+rtl_fm -M wbfm -s 480000 -r 48000 -f 73.3M - | ffplay -f s16le -ar 48000 -i -
+rtl_fm -M wbfm -s 480000 -r 48000 -f 73.3M - | hexdump -C
 
 ## demo
 git clone https://github.com/antirez/dump1090.git
