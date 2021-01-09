@@ -42,7 +42,11 @@ int hf_rx(hackrf_device* device){
 
 FILE *iqfile;
 int hf_tx_callback(hackrf_transfer* transfer) {
-    fread(transfer->buffer, transfer->valid_length, 1, iqfile);
+    int ret = fread(transfer->buffer, transfer->valid_length, 1, iqfile);
+    if (ret == 0){
+	printf("set\r\n");
+	fseek(iqfile, 0L, SEEK_SET);
+    }
     return 0;
 }
 
@@ -50,9 +54,11 @@ int hf_tx(hackrf_device* device){
     iqfile = fopen("hello.iq", "rb");
     hackrf_set_txvga_gain(device, 20);
     hackrf_set_sample_rate(device, 2000000);
-    hackrf_set_freq(device, 88500000);
+    hackrf_set_freq(device, 73300000);
     hackrf_start_tx(device, hf_tx_callback, NULL);
-    sleep(100);
+    while(1){
+	sleep(1);
+    }
     hackrf_stop_tx(device);
     fclose(iqfile);
 
