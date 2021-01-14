@@ -48,6 +48,7 @@ sudo cp ./rtl-sdr-0.6.0/rtl-sdr.rules /etc/udev/rules.d/
 timeout 2 rtl_fm -d 0 -g 49 -M usb -s 32000  -r 32000 -F 1 -f 50.293M outfile.raw
 timeout 2 rtl_fm -M wbfm -s 480000 -r 48000 -f 100.0M outfile.raw
 rtl_fm -M wbfm -s 480000 -r 48000 -f 73.3M - | ffplay -f s16le -ar 48000 -i -
+timeout 10 rtl_fm -M wbfm -s 480000 -r 48000 -f 73.3M - | ffmpeg -f s16le -ar 48000 -y -i - test.wav
 rtl_fm -M wbfm -s 480000 -r 48000 -f 73.3M - | hexdump -C
 rtl_fm -M raw -s 480000 -r 48000 -f 73.3M - | hexdump -C
 

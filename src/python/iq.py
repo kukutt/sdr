@@ -14,7 +14,7 @@ def normalize(arr, val):
     amin, amax = arr.min(), arr.max()
     print("min=", amin, "max=", amax)
     a = ((arr-amin)/(amax-amin)) - 0.5
-    a = a * val
+    a = a * val * 2;
     return a;
 
 def writewav(filename, sample_rate, arr):
@@ -139,6 +139,91 @@ def iq_test():
     plt.show()
     '''
 
+# timeout 10 rtl_fm -M raw -s 1008000 -f 73300000 test.iq
+def iq_2_signal_rtl_fm_raw():
+    sample = 1008000        # 采样率
+    totalsample = 0         # 总样本
+    carrier_freq = 138000  # 载波频率 通过fft测量
+    duration = int(sample/carrier_freq)  # 一个周期多少个点
+
+
+    arr = np.fromfile(sys.argv[1], dtype=np.int16)#按8位数据读取iq数据
+    signal_I=arr[0::2];
+    signal_Q=arr[1::2];
+    totalsample = len(signal_I)
+    x=np.linspace(0, totalsample/sample, totalsample)
+
+
+    plt.plot(x, signal_I)
+    plt.show()
+
+    plt.plot(x, signal_Q)
+    plt.show()
+
+    signal_I = normalize(signal_I, 30000)
+    signal_Q = normalize(signal_Q, 30000)
+    showfft(sample, signal_I)
+    showfft(sample, signal_Q)
+
+    resize_I = filter_data(signal_I, carrier_freq, sample)
+    resize_Q = filter_data(signal_Q, carrier_freq, sample)
+
+    showfft(sample, resize_I)
+    showfft(sample, resize_Q)
+
+
+    plt.plot(x, resize_I)
+    plt.show()
+
+    plt.plot(x, resize_Q)
+    plt.show()
+
+# 生成iq数据
+# hackrf_transfer -f 73300000 -s 2000000 -x 20 -R -t test.iq
+def signal_2_iq_raw():
+    sample = 2000000        # 采样率
+    totalsample = 20000000  # 总样本
+
+    x=np.linspace(0, totalsample/sample, totalsample)
+
+    # 信号生成
+    '''
+    ## 固定常数信号
+    signal_I = 5.0 * np.ones(len(x));
+    signal_Q = -7.0 * np.ones(len(x));
+    '''
+    
+    ## 正弦波信号
+    
+    signal_I = np.cos(2 * np.pi * x * 440);
+    signal_Q = np.sin(2 * np.pi * x * 700);
+    
+
+    ## 音频信号
+    '''
+    arr= np.fromfile(sys.argv[1], dtype=np.int16)#按8位数据读取iq数据
+    signal_I = arr[0:20000000]
+    signal_Q = arr[10000000:30000000]
+    '''
+
+    plt.plot(signal_I[:10000])
+    plt.show()
+    plt.plot(signal_Q[:10000])
+    plt.show()
+    signal_I = normalize(signal_I, 127)
+    signal_Q = normalize(signal_Q, 127)
+    plt.plot(signal_I[:10000])
+    plt.show()
+    plt.plot(signal_Q[:10000])
+    plt.show()
+    iq = np.ones(len(x)*2)
+    for i in range(int(len(iq)/2)):
+        iq[(i*2)] = signal_I[i];
+        iq[(i*2)+1] = signal_Q[i];
+    y_data=iq.astype(np.uint8).tobytes()
+    fo = open(sys.argv[2], "wb")
+    fo.write(y_data)
+    fo.close()
 
 
 def gen_wav():
@@ -264,5 +349,6 @@ def show_iq():
 
 
 if __name__=="__main__":
-    iq_test()
-    #testtest()
+    #iq_test()
+    iq_2_signal_rtl_fm_raw()
+    #signal_2_iq_raw()
