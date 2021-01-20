@@ -65,13 +65,13 @@ def test2():
     wave.write(filename='play4.wav')
 
 def test3():
-    wave = thinkdsp.read_wave("ThinkDSP-master/code/170255__dublie__trumpet.wav")
+    wave = thinkdsp.read_wave("test.wav")
     wave.plot()
     plt.show()
 
 
     spectrum = wave.make_spectrum()
-    spectrum.plot(high=1000)
+    spectrum.plot(high=2000)
     print(spectrum.peaks()[:30]);
     plt.show()
 

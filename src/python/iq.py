@@ -13,8 +13,11 @@ import os
 def normalize(arr, val):
     amin, amax = arr.min(), arr.max()
     print("min=", amin, "max=", amax)
-    a = ((arr-amin)/(amax-amin)) - 0.5
-    a = a * val * 2;
+    if (amin == amax):
+        a = arr * 0;
+    else:
+        a = ((arr-amin)/(amax-amin)) - 0.5
+        a = a * val * 2;
     return a;
 
 def writewav(filename, sample_rate, arr):
@@ -52,6 +55,7 @@ def filter_data(data, highcut, fs):
 # 解调:a = 积分(s(t)cos(wt), 载波周期)
 # 解调:b = 积分(-s(t)sin(wt), 载波周期)
 # 解调:低通滤波器
+# https://wenku.baidu.com/view/7f2633764935eefdc8d376eeaeaad1f34793111b
 def iq_test():
     sample = 20000000        # 采样率
     totalsample = 20000000  # 总样本
@@ -139,20 +143,41 @@ def iq_test():
     plt.show()
     '''
 
+
+def show_raw_wav():
+    sample = 2000000        # 采样率
+    totalsample = 0         # 总样本
+    carrier_freq = 138000  # 载波频率 通过fft测量
+
+
+    arr = np.fromfile(sys.argv[1], dtype=np.int8)#按8位数据读取iq数据
+    arr = arr[1::2]
+
+    totalsample = len(arr)
+    x=np.linspace(0, totalsample/sample, totalsample)
+
+
+    plt.plot(x, arr)
+    plt.show()
+    showfft(sample, arr)
+
+
+
 # timeout 10 rtl_fm -M raw -s 1008000 -f 73300000 test.iq
+# timeout 10 rtl_fm -M am -s 1008000 -f 73300000 iqsingnal_am.iq
 def iq_2_signal_rtl_fm_raw():
-    sample = 1008000        # 采样率
+    sample = 2000000        # 采样率
     totalsample = 0         # 总样本
     carrier_freq = 138000  # 载波频率 通过fft测量
     duration = int(sample/carrier_freq)  # 一个周期多少个点
 
 
-    arr = np.fromfile(sys.argv[1], dtype=np.int16)#按8位数据读取iq数据
+    arr = np.fromfile(sys.argv[1], dtype=np.int8)#按8位数据读取iq数据
+
     signal_I=arr[0::2];
     signal_Q=arr[1::2];
     totalsample = len(signal_I)
     x=np.linspace(0, totalsample/sample, totalsample)
-
 
     plt.plot(x, signal_I)
     plt.show()
@@ -196,7 +221,7 @@ def signal_2_iq_raw():
     ## 正弦波信号
     
     signal_I = np.cos(2 * np.pi * x * 440);
-    signal_Q = np.sin(2 * np.pi * x * 700);
+    signal_Q = np.sin(2 * np.pi * x * 700) * 0;
     
 
     ## 音频信号
@@ -347,8 +372,30 @@ def show_iq():
     '''
     
 
+def iq_test11():
+    sample = 20000000        # 采样率
+    totalsample = 20000000  # 总样本
+    carrier_freq = 2000000   # 载波频率
+    duration = int(sample/carrier_freq)  # 一个周期多少个点
+    x=np.linspace(0, totalsample/sample, totalsample)
+
+    ## 载波生成
+    rf_cos = 10 * np.cos(2 * np.pi * x * carrier_freq)
+    rf_sin = 10 * np.sin(2 * np.pi * x * carrier_freq)
+
+    y = rf_cos + rf_sin;
+
+    plt.plot(x[:100], rf_cos[:100])
+    plt.show()
+    plt.plot(x[:100], rf_sin[:100])
+    plt.show()
+    plt.plot(x[:100], y[:100])
+    plt.show()
 
 if __name__=="__main__":
     #iq_test()
-    iq_2_signal_rtl_fm_raw()
+    #gen_wav();
+    #show_raw_wav()
+    #iq_2_signal_rtl_fm_raw()
     #signal_2_iq_raw()
+    iq_test11();
