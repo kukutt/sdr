@@ -373,9 +373,9 @@ def show_iq():
     
 
 def iq_test11():
-    sample = 20000000        # 采样率
-    totalsample = 20000000  # 总样本
-    carrier_freq = 2000000   # 载波频率
+    sample = 200        # 采样率
+    totalsample = 400  # 总样本
+    carrier_freq = 1   # 载波频率
     duration = int(sample/carrier_freq)  # 一个周期多少个点
     x=np.linspace(0, totalsample/sample, totalsample)
 
@@ -383,13 +383,13 @@ def iq_test11():
     rf_cos = 10 * np.cos(2 * np.pi * x * carrier_freq)
     rf_sin = 10 * np.sin(2 * np.pi * x * carrier_freq)
 
-    y = rf_cos + rf_sin;
+    y1 = rf_cos - rf_sin;
+    y2 = rf_cos - (0.5 * rf_sin);
 
-    plt.plot(x[:100], rf_cos[:100])
-    plt.show()
-    plt.plot(x[:100], rf_sin[:100])
-    plt.show()
-    plt.plot(x[:100], y[:100])
+    plt.plot(x, rf_cos)
+    plt.plot(x, rf_sin)
+    plt.plot(x, y1)
+    plt.plot(x, y2)
     plt.show()
 
 if __name__=="__main__":

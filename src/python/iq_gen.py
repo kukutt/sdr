@@ -27,11 +27,16 @@ def iq_gen_fm():
     totalsample = len(arr)
     x=np.linspace(0, totalsample/sample, totalsample)
 
-    i = arr.copy().astype(np.float64)
-    q = arr.copy().astype(np.float64)
+    arr = arr.astype(np.float64);
     iq = np.ones(len(arr)*2).astype(np.float64)
-    i = iqfns.normalize(i, 1)
-    q = iqfns.normalize(q, 1)
+    arr = iqfns.normalize(arr, 1);
+    arr = arr * 0.9
+    
+
+    '''
+    arr = np.ones(20000000).astype(np.float64) * 0.9;
+    iq = np.ones(len(arr)*2).astype(np.float64)
+    '''
 
     '''
     # AM
@@ -43,28 +48,17 @@ def iq_gen_fm():
     '''
 
     # FM
-
-    ijf = 0.0;
-    qjf = 0.0;
+    fs = 75000;
+    devation = (2 * np.pi * (fs)) / sample;
+    ph = 0.0;
     for iii in range(0,len(arr)):
-        ijf = ijf + i[iii];
-        qjf = ijf + q[iii];
-        while ijf > 2 * np.pi :
-            ijf = ijf - 2 * np.pi;
-        while ijf < 2 * np.pi * (-1) :
-            ijf = ijf + 2 * np.pi;
-        while qjf > 2 * np.pi :
-            qjf = qjf - 2 * np.pi;
-        while qjf < 2 * np.pi * (-1) :
-            qjf = qjf + 2 * np.pi;
-        iq[int(iii*2)] = 127 * np.cos(2 * np.pi * 0.5 * ijf)
-        iq[int(iii*2)+1] = 127 * np.sin(2 * np.pi * 0.5 * qjf)
-
-    print("arr", arr[:100])
-    print("i", i[:100])
-    print("q", q[:100])
-    print("iq", iq[:100])
-
+        ph = ph + (devation * arr[iii]);
+        while ph > 2 * np.pi :
+            ph = ph - 2 * np.pi;
+        while ph < 2 * np.pi * (-1) :
+            ph = ph + 2 * np.pi;
+        iq[int(iii*2)] = 127 * np.cos(ph)
+        iq[int(iii*2)+1] = 127 * np.sin(ph)
     file = open(outfile, "wb")
     y_data=iq.astype(np.int8).tobytes()
     file.write(y_data)

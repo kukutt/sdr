@@ -2,6 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
+#include<sys/time.h>
+
+//static int g_freq = 1000000;
+//static int g_freq = 77300000;
+static int g_freq = 88500000;
+static int g_sample = 2000000;
+static int g_txga = 48;
+
+int hf_echotime(const char *s){
+    struct timeval tim;
+    gettimeofday(&tim, NULL);
+    long nowtim = ((long)tim.tv_sec)*1000+(long)tim.tv_usec/1000;
+    printf("[%s]: %ld msn\r\n", s, nowtim);
+}
 
 int hf_show(void){
     printf("%s\r\n", hackrf_library_version());
@@ -42,26 +57,83 @@ int hf_rx(hackrf_device* device){
 
 FILE *iqfile;
 int hf_tx_callback(hackrf_transfer* transfer) {
+    //hf_echotime("start");
+#if 0
     int ret = 1;
-    
-    //fread(transfer->buffer, transfer->valid_length, 1, iqfile);
+    ret = fread(transfer->buffer, transfer->valid_length, 1, iqfile);
+    if (ret == 0){
+	    printf("set\r\n");
+	    fseek(iqfile, 0L, SEEK_SET);
+    }
+#endif
+#if 0
     int i;    
     for (i = 0; i < transfer->valid_length; i+=2){
         transfer->buffer[i] = 127;
         transfer->buffer[i+1] = 127;
     }
-    if (ret == 0){
-	printf("set\r\n");
-	fseek(iqfile, 0L, SEEK_SET);
+#endif
+
+#if 0
+    static float phase = 0;
+    float deviation;
+    float i,q;
+    int a;
+    
+    deviation = (2.0f * M_PI * 75000) / (g_sample);
+
+    for (a = 0; a < transfer->valid_length; a+=2){
+        phase += deviation * 0.9f;
+        i = cos(phase);
+        q = sin(phase);
+        transfer->buffer[a] = (uint8_t)((127.0f * i));
+        transfer->buffer[a+1] = (uint8_t)((127.0f * q));
     }
+    //printf("%02x %02x\r\n", transfer->buffer[0], transfer->buffer[1]);
+    while (phase > (float)(2.0f * M_PI))phase -= (float)(2.0f * M_PI);
+    while (phase < (float)(-2.0f * M_PI))phase += (float)(2.0f * M_PI);
+#endif
+
+#if 1
+    static float phase = 0;
+    static int newfileflg = 0;
+    float deviation;
+    float i,q;
+    int a;
+
+    if (newfileflg == 0){
+	    fseek(iqfile, 138, SEEK_SET);
+        newfileflg = 1;
+    }
+    
+    short *music = (short *)malloc(transfer->valid_length * 1);
+    if (fread((char *)music, transfer->valid_length, 1, iqfile) == 0){
+        hf_echotime("music end");
+        newfileflg = 0;
+    }
+    
+    deviation = (2.0f * M_PI * 75000) / (g_sample);
+    for (a = 0; a < transfer->valid_length; a+=2){
+        phase += deviation * 0.9f * ((float)music[a/2]/32768.0);
+        i = cos(phase);
+        q = sin(phase);
+        transfer->buffer[a] = (uint8_t)((127.0f * i));
+        transfer->buffer[a+1] = (uint8_t)((127.0f * q));
+    }
+    //printf("%02x %02x\r\n", transfer->buffer[0], transfer->buffer[1]);
+    while (phase > (float)(2.0f * M_PI))phase -= (float)(2.0f * M_PI);
+    while (phase < (float)(-2.0f * M_PI))phase += (float)(2.0f * M_PI);
+    free(music);
+#endif
+    //hf_echotime("  end");
     return 0;
 }
 
 int hf_tx(hackrf_device* device){
     iqfile = fopen("hello.iq", "rb");
-    hackrf_set_txvga_gain(device, 50);
-    hackrf_set_sample_rate(device, 2000000);
-    hackrf_set_freq(device, 2000000);
+    hackrf_set_txvga_gain(device, g_txga);
+    hackrf_set_sample_rate(device, g_sample);
+    hackrf_set_freq(device, g_freq);
     hackrf_start_tx(device, hf_tx_callback, NULL);
     while(1){
 	sleep(1);
