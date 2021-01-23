@@ -6,8 +6,9 @@
 #include<sys/time.h>
 
 //static int g_freq = 1000000;
-//static int g_freq = 77300000;
-static int g_freq = 88500000;
+//static int g_freq = 20190000;
+static int g_freq = 77300000;
+//static int g_freq = 88500000;
 static int g_sample = 2000000;
 static int g_txga = 48;
 
@@ -125,6 +126,33 @@ int hf_tx_callback(hackrf_transfer* transfer) {
     while (phase < (float)(-2.0f * M_PI))phase += (float)(2.0f * M_PI);
     free(music);
 #endif
+
+#if 0
+    static int newfileflg = 0;
+    float tmp;
+    int a;
+
+    if (newfileflg == 0){
+	    fseek(iqfile, 138, SEEK_SET);
+        newfileflg = 1;
+    }
+    
+    short *music = (short *)malloc(transfer->valid_length * 1);
+    if (fread((char *)music, transfer->valid_length, 1, iqfile) == 0){
+        hf_echotime("music end");
+        newfileflg = 0;
+    }
+    
+    for (a = 0; a < transfer->valid_length; a+=2){
+        tmp = 63 * (((float)music[a/2]/32768.0) + 1.0);
+        transfer->buffer[a] = (uint8_t)(tmp);
+        transfer->buffer[a+1] = 0;
+
+        //printf("[%d] %d %d %d \r\n", a, music[a/2], transfer->buffer[a], transfer->buffer[a+1]);
+        //if (a > 10000)exit(1);
+    }
+    free(music);
+#endif
     //hf_echotime("  end");
     return 0;
 }
@@ -136,7 +164,7 @@ int hf_tx(hackrf_device* device){
     hackrf_set_freq(device, g_freq);
     hackrf_start_tx(device, hf_tx_callback, NULL);
     while(1){
-	sleep(1);
+	    sleep(1);
     }
     hackrf_stop_tx(device);
     fclose(iqfile);
@@ -144,7 +172,18 @@ int hf_tx(hackrf_device* device){
     return 0;
 }
 
+int testtestest(void){
+    float tmp = -39.0f;
+    uint8_t t = (uint8_t)tmp;
+
+    printf("%f %d\r\n", tmp, t);
+
+    exit(1);
+    return 0;
+}
+
 int main(int argc, char **argv){
+    //testtestest();
     int ret;
     hackrf_device* device;
     printf("hackrf_init:%d\r\n", hackrf_init());
