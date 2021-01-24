@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from scipy.fftpack import fft,ifft,fftfreq
+from scipy.fftpack import fft,ifft,fftfreq,hilbert
 from scipy import signal
 import sys
 import time
@@ -104,11 +104,33 @@ def iq_see():
     iqfns.showfft(sample, i)
     iqfns.showfft(sample, q)
 
+def test():
+    t = np.arange(0, 0.3, 1/20000.0)
+    #x = np.sin(2*np.pi*1000*t) * (np.sin(2*np.pi*20*t) + np.sin(2*np.pi*8*t) + 3.0)
+    x = np.sin(2*np.pi*5*t) * np.sin(2*np.pi*1000*t)
+    hx = hilbert(x)
+    print(x.dtype, hx.dtype)
+    print(x[:100])
+    print(hx[:100])
+
+    plt.subplot(211)
+    plt.plot(x, label=u"Carrier")
+    plt.subplot(212)
+    plt.plot(x, label=u"Carrier")
+    plt.plot(np.sqrt(x**2 + hx**2), "r", linewidth=2, label=u"Envelop")
+    #plt.title(u"Hilbert Transform")
+    plt.show()
 
 if __name__=="__main__":
     if (2 > len(sys.argv)):
         print("iq_see [iqfile]")
-        print("iq_gen_fm [wavfile] [iqfile]")
+        print("iq_gen [am/fm/dsb/usb/lsb] [wavfile] [iqfile]")
+        print("test")
         sys.exit()
     print(sys.argv[1])
-    eval(sys.argv[1])(sys.argv[2])
+    try:
+        sys.argv[2]
+    except:
+        eval(sys.argv[1])()
+    else:
+        eval(sys.argv[1])(sys.argv[2])
