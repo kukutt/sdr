@@ -34,7 +34,7 @@ def iq_gen(mode):
     arr = arr.astype(np.float64);
     iq = np.ones(len(arr)*2).astype(np.float64)
     arr = iqfns.normalize(arr, 1);
-    arr = arr * 0.9
+    arr = arr * 0.8
     
     '''
     arr = np.ones(20000000).astype(np.float64) * 0.9;
@@ -67,15 +67,29 @@ def iq_gen(mode):
             amtmp =(arr[iii] + 1) * 0.5
             iq[int(iii*2)] = 127 * amtmp;
             iq[int(iii*2)+1] = 0
-    # dsb
-    if (mode == "dsb"):
+    # usb/lsb/dsb
+    if (mode == "usb") or (mode == "lsb") or (mode == "dsb"):
         modeok = 1;
-        amtmp = 0.0
+        harr = hilbert(arr)
+        print(arr.min(), arr.max(), harr.min(), harr.max())
+
+        '''
+        plt.subplot(211)
+        plt.plot(arr[20000:50000], label=u"arr")
+        plt.subplot(212)
+        plt.plot(harr[20000:50000], label=u"harr")
+        plt.show()
+        '''
+
         for iii in range(0,len(arr)):
             showjd(iii, arr)
-            amtmp = arr[iii];
-            iq[int(iii*2)] = 127 * amtmp;
-            iq[int(iii*2)+1] = 0
+            iq[int(iii*2)] = 127 * arr[iii]
+            if (mode == "usb"):
+                iq[int(iii*2)+1] = -127 * harr[iii]
+            elif (mode == "lsb"):
+                iq[int(iii*2)+1] = 127 * harr[iii]
+            else:
+                iq[int(iii*2)+1] = 0;
 
     if (modeok == 1):
         file = open(outfile, "wb")
@@ -107,15 +121,18 @@ def iq_see():
 def test():
     t = np.arange(0, 0.3, 1/20000.0)
     #x = np.sin(2*np.pi*1000*t) * (np.sin(2*np.pi*20*t) + np.sin(2*np.pi*8*t) + 3.0)
-    x = np.sin(2*np.pi*5*t) * np.sin(2*np.pi*1000*t)
+    #x = np.sin(2*np.pi*5*t) * np.sin(2*np.pi*1000*t)
+    x = np.sin(2*np.pi*5*t)
     hx = hilbert(x)
     print(x.dtype, hx.dtype)
     print(x[:100])
     print(hx[:100])
 
-    plt.subplot(211)
+    plt.subplot(311)
     plt.plot(x, label=u"Carrier")
-    plt.subplot(212)
+    plt.subplot(312)
+    plt.plot(hx, label=u"Carrier")
+    plt.subplot(313)
     plt.plot(x, label=u"Carrier")
     plt.plot(np.sqrt(x**2 + hx**2), "r", linewidth=2, label=u"Envelop")
     #plt.title(u"Hilbert Transform")
