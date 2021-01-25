@@ -17,7 +17,8 @@ def showjd(iii, arr):
 # ## ffmpeg 生成pcm数据
 # ffmpeg -i sin.wav -acodec pcm_s16le -ac 1 -ar 2000000 -f f32le  output2.pcm
 # ffmpeg -i canon.mp3 -acodec pcm_s16le -ac 1 -ar 2000000 -f f32le -ss 00:00:10 -to 00:00:20 output2.pcm
-# 
+# ## pcm 转 wav
+# ffmpeg -acodec pcm_s16le -ac 1 -ar 2000000 -f f32le -i output2.pcm  output2.wav
 # 生成iq格式的fm
 # hackrf_transfer -f 73300000 -s 2000000 -x 20 -R -t test.iq
 def iq_gen(mode):
@@ -119,24 +120,20 @@ def iq_see():
     iqfns.showfft(sample, q)
 
 def test():
-    t = np.arange(0, 0.3, 1/20000.0)
-    #x = np.sin(2*np.pi*1000*t) * (np.sin(2*np.pi*20*t) + np.sin(2*np.pi*8*t) + 3.0)
-    #x = np.sin(2*np.pi*5*t) * np.sin(2*np.pi*1000*t)
-    x = np.sin(2*np.pi*5*t)
-    hx = hilbert(x)
-    print(x.dtype, hx.dtype)
-    print(x[:100])
-    print(hx[:100])
+    # wav 音频数据
+    arr = np.fromfile("output2.pcm", dtype=np.int16)
+    arr = arr.astype(np.float64)
+    harr = hilbert(arr)
 
-    plt.subplot(311)
-    plt.plot(x, label=u"Carrier")
-    plt.subplot(312)
-    plt.plot(hx, label=u"Carrier")
-    plt.subplot(313)
-    plt.plot(x, label=u"Carrier")
-    plt.plot(np.sqrt(x**2 + hx**2), "r", linewidth=2, label=u"Envelop")
-    #plt.title(u"Hilbert Transform")
-    plt.show()
+    file = open("arr.pcm", "wb")
+    y_data=arr.astype(np.int16).tobytes()
+    file.write(y_data)
+    file.close()
+
+    file = open("harr.pcm", "wb")
+    y_data=harr.astype(np.int16).tobytes()
+    file.write(y_data)
+    file.close()
 
 if __name__=="__main__":
     if (2 > len(sys.argv)):
