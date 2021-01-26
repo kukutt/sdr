@@ -19,6 +19,8 @@ def showjd(iii, arr):
 # ffmpeg -i canon.mp3 -acodec pcm_s16le -ac 1 -ar 2000000 -f f32le -ss 00:00:10 -to 00:00:20 output2.pcm
 # ## pcm 转 wav
 # ffmpeg -acodec pcm_s16le -ac 1 -ar 2000000 -f f32le -i output2.pcm  output2.wav
+# ## MP3 转 wav
+# ffmpeg -i canon.mp3 -ac 1 -ar 2000000 -ss 00:00:10 -to 00:00:20 output2.wav
 # 生成iq格式的fm
 # hackrf_transfer -f 73300000 -s 2000000 -x 20 -R -t test.iq
 def iq_gen(mode):
@@ -29,6 +31,7 @@ def iq_gen(mode):
 
     # wav 音频数据
     arr= np.fromfile(infile, dtype=np.int16)
+    #arr = iqfns.readwav(infile, sample)
     totalsample = len(arr)
     x=np.linspace(0, totalsample/sample, totalsample)
 
@@ -119,27 +122,18 @@ def iq_see():
     iqfns.showfft(sample, i)
     iqfns.showfft(sample, q)
 
-def test():
-    # wav 音频数据
-    arr = np.fromfile("output2.pcm", dtype=np.int16)
-    arr = arr.astype(np.float64)
-    harr = hilbert(arr)
-
-    file = open("arr.pcm", "wb")
-    y_data=arr.astype(np.int16).tobytes()
-    file.write(y_data)
-    file.close()
-
-    file = open("harr.pcm", "wb")
-    y_data=harr.astype(np.int16).tobytes()
-    file.write(y_data)
-    file.close()
+def hilbert_test():
+    arr,sample_rate = iqfns.readwav("output3.wav", 48000)
+    arr_h = hilbert(arr)
+    print(arr.dtype, arr_h.dtype, arr.min(), arr.max(), arr_h.min(), arr_h.max())
+    iqfns.writewav("arr.wav", sample_rate, arr)
+    iqfns.writewav("arr_h.wav", sample_rate, arr_h)
 
 if __name__=="__main__":
     if (2 > len(sys.argv)):
         print("iq_see [iqfile]")
         print("iq_gen [am/fm/dsb/usb/lsb] [wavfile] [iqfile]")
-        print("test")
+        print("hilbert_test")
         sys.exit()
     print(sys.argv[1])
     try:

@@ -20,6 +20,23 @@ def normalize(arr, val):
         a = a * val * 2;
     return a;
 
+def readwav(filename, sample):
+    file=wave.open(filename,'rb')
+    num_frame = file.getnframes()
+    num_channel=file.getnchannels()
+    framerate=file.getframerate()
+    num_sample_width=file.getsampwidth()
+    print('帧数',num_frame,'  声道数',num_channel,'  帧速率',framerate,'  实例的比特宽度，即每一帧的字节数', num_sample_width)
+    str_data = file.readframes(num_frame)
+    file.close()
+    wave_data = np.fromstring(str_data, dtype = np.short)
+    wave_data = wave_data.astype(np.float64)
+    print(len(wave_data))
+    repeatcount = sample/framerate;
+    wave_data = wave_data.repeat(repeatcount)
+    print(len(wave_data))
+    return wave_data
+
 def writewav(filename, sample_rate, arr):
     file=wave.open(filename,'wb')
     file.setnchannels(1)#设置通道数
