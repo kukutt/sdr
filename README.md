@@ -31,6 +31,9 @@ git clone https://github.com/csete/gqrx.git
 wget https://github.com/csete/gqrx/archive/v2.14.1.tar.gz  
 cmake -DCMAKE_INSTALL_PREFIX=$PWD/../../run ../  
 
+# Raspberry pi
+https://github.com/rm-hull/pifm.git
+https://github.com/F5OEO/rpitx.git
 
 # test
 hackrf_transfer -r /dev/stdout -f 315000000 -a 1 -g 16 -l 32 -s 8000000  
