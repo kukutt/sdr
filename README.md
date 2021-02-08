@@ -34,6 +34,17 @@ cmake -DCMAKE_INSTALL_PREFIX=$PWD/../../run ../
 # Raspberry pi
 https://github.com/rm-hull/pifm.git
 https://github.com/F5OEO/rpitx.git
+## csdr man
+### build csdr
+git clone https://github.com/F5OEO/csdr
+PREFIX=$PWD/../run/ make
+PREFIX=$PWD/../run/ make install
+### gen iq data (dsb)
+cat cos.wav | csdr convert_i16_f | csdr fir_interpolate_cc 4 | csdr dsb_fc | csdr fastagc_ff | csdr convert_f_s8  > test3.iq
+### gen iq data (lsb)
+cat cos.wav | csdr convert_i16_f | csdr fir_interpolate_cc 4 | csdr dsb_fc | csdr bandpass_fir_fft_cc -0.06 -0.002 0.01 | csdr fastagc_ff | csdr convert_f_s8  > test3.iq
+### gen iq data (usb)
+cat cos.wav | csdr convert_i16_f | csdr fir_interpolate_cc 4 | csdr dsb_fc | csdr bandpass_fir_fft_cc 0.002 0.06 0.01 | csdr fastagc_ff | csdr convert_f_s8  > test3.iq
 
 # test
 hackrf_transfer -r /dev/stdout -f 315000000 -a 1 -g 16 -l 32 -s 8000000  

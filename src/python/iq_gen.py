@@ -3,6 +3,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.fftpack import fft,ifft,fftfreq,hilbert,ihilbert
 from scipy import signal
+import scipy
 import sys
 import time
 import datetime
@@ -26,7 +27,7 @@ def showjd(iii, arr):
 def iq_gen(mode):
     infile=sys.argv[3]
     outfile=sys.argv[4]
-    sample = 2000000        # 采样率
+    sample = 192000         # 采样率
     totalsample = 0         # 总样本
 
     # wav 音频数据
@@ -76,15 +77,16 @@ def iq_gen(mode):
     # usb/lsb/dsb
     if (mode == "usb") or (mode == "lsb") or (mode == "dsb"):
         modeok = 1;
-        harr = hilbert(arr) * (-1)
+        harr = hilbert(arr)
         print(arr.min(), arr.max(), harr.min(), harr.max())
 
-        
+        '''
         plt.subplot(211)
         plt.plot(arr[0:50000], label=u"arr")
         plt.subplot(212)
         plt.plot(harr[0:50000], label=u"harr")
         plt.show()
+        '''
         
 
         for iii in range(0,len(arr)):
@@ -102,72 +104,42 @@ def iq_gen(mode):
         y_data=iq.astype(np.int8).tobytes()
         file.write(y_data)
         file.close()
-        print("hackrf_transfer -f 73300000 -s 2000000 -x 20 -R -t %s" % (outfile))
+        print("hackrf_transfer -f 73300000 -s %d -x 20 -R -t %s" % (sample, outfile))
     else:
         print("mode error", mode)
 
-def iq_see():
-    filename="lsb_cos_880.iq"
-    sample = 2000000        # 采样率
+def iq_sim():
+    filename="usb.iq"
+    sample = 192000         # 采样率
     totalsample = 0         # 总样本
-    arr= np.fromfile(filename, dtype=np.int8)
+    carrier_freq = 20000    # 载波频率
+    arr= np.fromfile(filename, dtype=np.int8) #np.int8 np.float32
     i = arr[0::2]
     q = arr[1::2]
     totalsample = len(i)
     x=np.linspace(0, totalsample/sample, totalsample)
 
-    plt.plot(x[0:10000], i[0:10000]);
-    plt.show()
-    plt.plot(x[0:10000], q[0:10000]);
-    plt.show()
 
-    iqfns.showfft(sample, i)
-    iqfns.showfft(sample, q)
-
-def hilbert_test():
-    arr,sample_rate = iqfns.readwav("output3.wav", 48000)
-    arr_h = hilbert(arr)
-    print(arr.dtype, arr_h.dtype, arr.min(), arr.max(), arr_h.min(), arr_h.max())
-    iqfns.writewav("arr.wav", sample_rate, arr)
-    iqfns.writewav("arr_h.wav", sample_rate, arr_h)
+    carrier_I = 500 * np.cos(2 * np.pi * x * carrier_freq);
+    carrier_Q = 500 * np.sin(2 * np.pi * x * carrier_freq);
 
 
-# 单音单边带测
-def ssb_test():
-    sample = 200000           # 采样率
-    totalsample = 200000      # 总样本
-    carrier_freq = 20000      # 载波频率
-    signal_freq = 200         # 信号
-    duration = 3 * int(sample/signal_freq)  # 一个周期多少个点
-    x=np.linspace(0, totalsample/sample, totalsample)
-
-
-    carrier_I =   np.cos(2 * np.pi * x * carrier_freq);
-    carrier_Q =   np.sin(2 * np.pi * x * carrier_freq);
-    signal_I =    np.cos(2 * np.pi * x * signal_freq);
-
-    # signal_Q =    np.cos(2 * np.pi * x * signal_freq) * 0;
-    signal_Q = hilbert(signal_I) * (-1)
-    # signal_Q = hilbert(signal_I) * (-1) * (-1)
-    output = carrier_I * signal_I + carrier_Q * signal_Q;
-
-    plt.subplot(411)
-    plt.plot(x[0:duration], carrier_I[0:duration]);
-    plt.subplot(412)
-    plt.plot(x[0:duration], signal_I[0:duration]);
-    plt.subplot(413)
-    plt.plot(x[0:duration], signal_Q[0:duration]);
-    plt.subplot(414)
-    plt.plot(x[0:duration], output[0:duration]);
+    plt.figure(filename)
+    plt.subplot(211)
+    plt.plot(x[192000:192100], i[192000:192100]);
+    plt.subplot(212)
+    plt.plot(x[192000:192100], q[192000:192100]);
     plt.show()
 
-    iqfns.showfft(sample, output)
+    out = i*carrier_I + q*carrier_Q
+    iqfns.showfft(sample, out)
+    #iqfns.showfft(sample, q)
 
 def make_cos():
     filename="cos.wav"
-    sample = 2000000           # 采样率
-    totalsample = 20000000     # 总样本
-    signal_freq = 880          # 信号
+    sample = 48000           # 采样率
+    totalsample = 480000     # 总样本
+    signal_freq = 8800       # 信号
     x=np.linspace(0, totalsample/sample, totalsample)
     signal = 30000 * np.cos(2 * np.pi * x * signal_freq);
     iqfns.showfft(sample,signal)
@@ -178,6 +150,53 @@ def show_cos():
     sample = 48000           # 采样率
     signal = iqfns.readwav(filename, sample)
     iqfns.showfft(sample,signal)
+
+
+def testtest2():
+    t = np.arange(2*np.pi,2*np.pi+1,1/1024)
+    t = t[1:]
+    x = np.cos(10*t*2*np.pi)
+    h = (1/(np.pi*t))
+
+    fx = np.array([1,4,3,6,2,3,1,4,5,3,4])
+    gx = np.array([0,0,0,0.05,0.8,1,0.2,0.01,0,0,0])
+    print(len(fx), len(gx))
+    print(np.convolve(fx,gx, 'same'))
+
+    H_conv = np.convolve(x,h,'same')
+    plt.subplot(211)
+    plt.title('src', y = 0)
+    plt.plot(t,x)
+
+    plt.subplot(212)
+    plt.title("conv", y = 0)
+    plt.plot(t,H_conv)
+    plt.show()
+
+def testtest1():
+    t = np.arange(0,1,1/1024)
+    x = np.sin(10*t*2*np.pi)
+    h = (1/(np.pi*x))
+    H_y1_signal = scipy.signal.hilbert(x).imag
+    H_y1_fftpack = scipy.fftpack.hilbert(x)
+
+
+    y = scipy.signal.convolve(x,h)
+    print(len(y), len(t))
+    plt.plot(y)
+    plt.show()
+
+    plt.subplot(311)
+    plt.title('src', y = 0)
+    plt.plot(t,x)
+    plt.subplot(312)
+    plt.title('scipy.signal.hilbert', y = 0)
+    plt.plot(t,H_y1_signal)
+    plt.subplot(313)
+    plt.title('scipy.fftpack.hilbert', y = 0)
+    plt.plot(t,H_y1_fftpack)
+    plt.savefig("save.png",  dpi=300)
+    plt.show()
 
 if __name__=="__main__":
     if (2 > len(sys.argv)):
