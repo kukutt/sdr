@@ -1,0 +1,6 @@
+# 说明
+usb.sh 4800采样率音频.wav 发送上边带  
+lsb.sh 4800采样率音频.wav 发送下边带  
+dsb.sh 4800采样率音频.wav 发送双边带  
+iq_gen.sh python写调制代码,生产数据用sendiq发送  
+cos.wav 48000采样率 1k频率数据 方便校准用
