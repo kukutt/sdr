@@ -105,6 +105,7 @@ def iq_gen(mode):
         file.write(y_data)
         file.close()
         print("hackrf_transfer -f 73300000 -s %d -x 20 -R -t %s" % (sample, outfile))
+        print("sudo sendiq -s %d -f 434e6 -t u8 -l -i %s" % (sample, outfile))
     else:
         print("mode error", mode)
 
@@ -139,10 +140,10 @@ def make_cos():
     filename="cos.wav"
     sample = 48000           # 采样率
     totalsample = 480000     # 总样本
-    signal_freq = 8800       # 信号
+    signal_freq = 1000       # 信号
     x=np.linspace(0, totalsample/sample, totalsample)
     signal = 30000 * np.cos(2 * np.pi * x * signal_freq);
-    iqfns.showfft(sample,signal)
+    #iqfns.showfft(sample,signal)
     iqfns.writewav(filename, sample, signal)
 
 def show_cos():
