@@ -110,11 +110,11 @@ def iq_gen(mode):
         print("mode error", mode)
 
 def iq_sim():
-    filename="usb.iq"
-    sample = 192000         # 采样率
+    filename="../c/aaa.iq"
+    sample = 192000         # 采样率 192000
     totalsample = 0         # 总样本
     carrier_freq = 20000    # 载波频率
-    arr= np.fromfile(filename, dtype=np.int8) #np.int8 np.float32
+    arr= np.fromfile(filename, dtype=np.int8) #np.int8 np.float32 np.float64
     i = arr[0::2]
     q = arr[1::2]
     totalsample = len(i)
@@ -127,14 +127,15 @@ def iq_sim():
 
     plt.figure(filename)
     plt.subplot(211)
-    plt.plot(x[192000:192100], i[192000:192100]);
+    plt.plot(x[192000:193000], i[192000:193000]);
     plt.subplot(212)
-    plt.plot(x[192000:192100], q[192000:192100]);
+    plt.plot(x[192000:193000], q[192000:193000]);
     plt.show()
 
     out = i*carrier_I + q*carrier_Q
+    iqfns.showfft(sample, i)
+    iqfns.showfft(sample, q)
     iqfns.showfft(sample, out)
-    #iqfns.showfft(sample, q)
 
 def make_cos():
     filename="cos.wav"
@@ -151,7 +152,6 @@ def show_cos():
     sample = 48000           # 采样率
     signal = iqfns.readwav(filename, sample)
     iqfns.showfft(sample,signal)
-
 
 def testtest2():
     t = np.arange(2*np.pi,2*np.pi+1,1/1024)
