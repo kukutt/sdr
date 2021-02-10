@@ -27,7 +27,7 @@ def showjd(iii, arr):
 def iq_gen(mode):
     infile=sys.argv[3]
     outfile=sys.argv[4]
-    sample = 192000         # 采样率
+    sample = 480000         # 采样率
     totalsample = 0         # 总样本
 
     # wav 音频数据
@@ -50,6 +50,13 @@ def iq_gen(mode):
 
     print("mode =", mode);
     modeok = 0;
+    # tune
+    if (mode == "tune"):
+        modeok = 1;
+        for iii in range(0,len(arr)):
+            showjd(iii, arr)
+            iq[int(iii*2)] = 127;
+            iq[int(iii*2)+1] = 0
     # FM
     if (mode == "fm"):
         modeok = 1;
@@ -74,6 +81,7 @@ def iq_gen(mode):
             amtmp =(arr[iii] + 1) * 0.5
             iq[int(iii*2)] = 127 * amtmp;
             iq[int(iii*2)+1] = 0
+
     # usb/lsb/dsb
     if (mode == "usb") or (mode == "lsb") or (mode == "dsb"):
         modeok = 1;
@@ -104,8 +112,8 @@ def iq_gen(mode):
         y_data=iq.astype(np.int8).tobytes()
         file.write(y_data)
         file.close()
-        print("hackrf_transfer -f 73300000 -s %d -x 20 -R -t %s" % (sample, outfile))
-        print("sudo sendiq -s %d -f 434e6 -t u8 -l -i %s" % (sample, outfile))
+        print("hackrf_transfer -f 434000000 -s %d -x 20 -R -t %s" % (sample, outfile))
+        #print("sudo sendiq -s %d -f 434e6 -t u8 -l -i %s" % (sample, outfile))
     else:
         print("mode error", mode)
 
