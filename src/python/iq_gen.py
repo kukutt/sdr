@@ -182,30 +182,30 @@ def testtest2():
     plt.plot(t,H_conv)
     plt.show()
 
-def testtest1():
-    t = np.arange(0,1,1/1024)
-    x = np.sin(10*t*2*np.pi)
-    h = (1/(np.pi*x))
-    H_y1_signal = scipy.signal.hilbert(x).imag
-    H_y1_fftpack = scipy.fftpack.hilbert(x)
+def fftlearn():
+    fs = 1000
+    t = np.arange(0,1+(1/fs),1/fs)
+    x = 10*np.sin(2*t*2*np.pi)
+    #fftx = np.fft.fftshift(np.fft.fft(x) / t.shape[0])
+    fftx = (np.fft.fft(x) / t.shape[0])
+    #fftt = np.linspace(-1, 1, t.shape[0]) * (fs / 2)
 
+    #print(t.shape[0], len(t), len(fftt))
 
-    y = scipy.signal.convolve(x,h)
-    print(len(y), len(t))
-    plt.plot(y)
-    plt.show()
+    fftt = np.linspace(0,fs,fs+1)
+    ffta = np.abs(fftx)
+    fftp = np.angle(fftx)
 
+    # 原函数
     plt.subplot(311)
-    plt.title('src', y = 0)
-    plt.plot(t,x)
+    plt.plot(t, x)
     plt.subplot(312)
-    plt.title('scipy.signal.hilbert', y = 0)
-    plt.plot(t,H_y1_signal)
+    plt.plot(fftt[0:10], ffta[0:10])
     plt.subplot(313)
-    plt.title('scipy.fftpack.hilbert', y = 0)
-    plt.plot(t,H_y1_fftpack)
-    plt.savefig("save.png",  dpi=300)
+    plt.plot(fftt[0:10], fftp[0:10])
     plt.show()
+
+    print(ffta[0:10], fftp[0:10])
 
 if __name__=="__main__":
     if (2 > len(sys.argv)):
