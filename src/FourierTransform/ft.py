@@ -66,14 +66,18 @@ def dft_test2():
     z = idft(y)
     plot_dft(x,y,z,Fs,N)
 
+
+def dft_test3():
+    src1 = [complex(1,0),complex(3,0),complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),\
+    complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),complex(2,0),complex(5,0)]
+    dst = dft(src1)
+    src2 = idft(dst)
+    print(src1)
+    print(dst)
+    print(src2)
+
 def fft_test():
     src = [complex(1,0),complex(3,0),complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),\
-    complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),complex(2,0),complex(5,0),\
-    complex(8,0),complex(4,0),complex(1,0),complex(3,0),complex(2,0),complex(5,0),complex(8,0),complex(4,0),\
-    complex(1,0),complex(3,0),complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),\
-    complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),complex(2,0),complex(5,0),\
-    complex(8,0),complex(4,0),complex(1,0),complex(3,0),complex(2,0),complex(5,0),complex(8,0),complex(4,0),\
-    complex(1,0),complex(3,0),complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),\
     complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),complex(2,0),complex(5,0)]
     print(len(src), src)
     dst = fft(src)
@@ -97,4 +101,5 @@ if __name__ == "__main__":
     #iq_sim()
     #dft_test1()
     #dft_test2()
-    fft_test()
+    dft_test3()
+    #fft_test()

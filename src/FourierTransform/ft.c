@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h> 
+#include <string.h>
 
 typedef double Float64;
 
@@ -9,6 +10,8 @@ typedef struct {
     Float64 r;  /* 实部 */
     Float64 i;  /* 虚部 */
 } CPX;
+
+int printcpx(int samplerate, int time, CPX *signal, int start, int end);
 
 int timeuseset(char *name, int flg){
     static struct timeval tpstart;
@@ -25,33 +28,13 @@ int timeuseset(char *name, int flg){
     }
 }
 
-#define N 64 //64点
-#define log2N 6 //log2N=6
+#define log2N 4 //log2N=6
 /*复数类型*/
 typedef struct
 {
     float real;
     float img;
 }complex;
-
-CPX WN[N]={\
-    {1.00000,0.00000},{0.99518,-0.09802},{0.98079,-0.19509},{0.95694,-0.29028},\
-    {0.92388,-0.38268},{0.88192,-0.47140},{0.83147,-0.55557},{0.77301,-0.63439},\
-    {0.70711,-0.70711},{0.63439,-0.77301},{0.55557,-0.83147},{0.47140,-0.88192},\
-    {0.38268,-0.92388},{0.29028,-0.95694},{0.19509,-0.98079},{0.09802,-0.99518},\
-    {0.00000,-1.00000},{-0.09802,-0.99518},{-0.19509,-0.98079},{-0.29028,-0.95694},\
-    {-0.38268,-0.92388},{-0.47140,-0.88192},{-0.55557,-0.83147},{-0.63439,-0.77301},\
-    {-0.70711,-0.70711},{-0.77301,-0.63439},{-0.83147,-0.55557},{-0.88192,-0.47140},\
-    {-0.92388,-0.38268},{-0.95694,-0.29028},{-0.98079,-0.19509},{-0.99518,-0.09802},\
-    {-1.00000,0.00000},{-0.99518,0.09802},{-0.98079,0.19509},{-0.95694,0.29028},\
-    {-0.92388,0.38268},{-0.88192,0.47140},{-0.83147,0.55557},{-0.77301,0.63439},\
-    {-0.70711,0.70711},{-0.63439,0.77301},{-0.55557,0.83147},{-0.47140,0.88192},\
-    {-0.38268,0.92388},{-0.29028,0.95694},{-0.19509,0.98079},{-0.09802,0.99518},\
-    {0.00000,1.00000},{0.09802,0.99518},{0.19509,0.98079},{0.29028,0.95694},\
-    {0.38268,0.92388},{0.47140,0.88192},{0.55557,0.83147},{0.63439,0.77301},\
-    {0.70711,0.70711},{0.77301,0.63439},{0.83147,0.55557},{0.88192,0.47140},\
-    {0.92388,0.38268},{0.95694,0.29028},{0.98079,0.19509},{0.99518,0.09802}\
-};
 
 /*复数加法*/
 CPX add(CPX a, CPX b){
@@ -80,7 +63,7 @@ CPX mul(CPX a, CPX b)
 }
 
 /***码位倒序函数***/
-void Reverse(CPX *x)
+void Reverse(int N, CPX *x)
 {
     unsigned int i,j,k;
     unsigned int t;
@@ -106,8 +89,18 @@ void Reverse(CPX *x)
 
 void fft(int framelen, CPX *x){
     unsigned int i,j,k,l; 
+    int N = framelen;    
     CPX top,bottom,xW;
-    Reverse(x); //码位倒序
+    //printcpx(16, 1, x, 0, 0);
+    Reverse(N, x); //码位倒序
+    //printcpx(16, 1, x, 0, 0);
+    
+    CPX *WN = (CPX *)calloc(N,sizeof(CPX));
+    for(i=0;i<N;i++){
+        WN[i].r = cos(2.0*M_PI*(double)i/(double)N);
+        WN[i].i = sin(2.0*M_PI*(double)i/(double)N);
+    }
+    
     for(i=0;i<log2N;i++)   /*共log2N级*/
     { //一级蝶形运算
         l=1<<i;//l等于2的i次方
@@ -120,6 +113,7 @@ void fft(int framelen, CPX *x){
                 bottom=sub(x[j+k],xW);
                 x[j+k]=top;
                 x[j+k+l]=bottom;
+                printf("%d %d\r\n", j+k, j+k+l);
             }
         }
     }
@@ -133,6 +127,8 @@ void dft(int dir, int framelen, CPX *signal, CPX *dft_s){
 
     for(i=0;i<framelen;i++){
         arg=-dir*2.0*M_PI*(double)i/(double)framelen;
+        dft_s[i].r = 0;
+        dft_s[i].i = 0;
 
         for(k=0;k<framelen;k++){
             cosarg=cos(k*arg);
@@ -235,23 +231,37 @@ int dfttest(int ss){
 
     return 0;
 }
+    
+CPX x[]={{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},\
+         {2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},};
+
+int dfttest2(void){
+    int i;
+    CPX dft_s[16];
+    CPX src[16];
+    memcpy(src, x, sizeof(src));
+    timeuseset("dft", 0);
+    dft(1, 16, src, dft_s);
+    timeuseset("dft", 1);
+    printcpx(16, 1, dft_s, 0, 0);
+    return 0;
+}
 
 int ffttest(void){
-    CPX x[N]={{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},{2,0},{5,0}};
     int i;
+    CPX src[16];
+    memcpy(src, x, sizeof(src));
     timeuseset("fft", 0);
-    fft(64, x);
+    fft(16, src);
     timeuseset("fft", 1);
-    for (i = 0; i < 64; i++){
-        printf("%f %f\r\n", x[i].r, x[i].i);
-    }
+    printcpx(16, 1, src, 0, 0);
     return 0;
 }
 
 int main(int argc, char **argv){
     printf("dsp start\r\n");
-    ffttest();
-    dfttest(64);
+    //ffttest();
+    dfttest2();
 #if 0
     dfttest(256);
     dfttest(1024);
