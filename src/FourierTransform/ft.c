@@ -28,7 +28,7 @@ int timeuseset(char *name, int flg){
     }
 }
 
-#define log2N 4 //log2N=6
+#define log2N 3 //log2N=6
 /*复数类型*/
 typedef struct
 {
@@ -91,14 +91,12 @@ void fft(int framelen, CPX *x){
     unsigned int i,j,k,l; 
     int N = framelen;    
     CPX top,bottom,xW;
-    //printcpx(16, 1, x, 0, 0);
     Reverse(N, x); //码位倒序
-    //printcpx(16, 1, x, 0, 0);
     
     CPX *WN = (CPX *)calloc(N,sizeof(CPX));
     for(i=0;i<N;i++){
         WN[i].r = cos(2.0*M_PI*(double)i/(double)N);
-        WN[i].i = sin(2.0*M_PI*(double)i/(double)N);
+        WN[i].i = sin(2.0*M_PI*(double)i/(double)N) * (-1);
     }
     
     for(i=0;i<log2N;i++)   /*共log2N级*/
@@ -113,7 +111,7 @@ void fft(int framelen, CPX *x){
                 bottom=sub(x[j+k],xW);
                 x[j+k]=top;
                 x[j+k+l]=bottom;
-                printf("%d %d\r\n", j+k, j+k+l);
+                //printf("%d %d\r\n", j+k, j+k+l);
             }
         }
     }
@@ -249,19 +247,19 @@ int dfttest2(void){
 
 int ffttest(void){
     int i;
-    CPX src[16];
+    CPX src[8];
     memcpy(src, x, sizeof(src));
     timeuseset("fft", 0);
-    fft(16, src);
+    fft(8, src);
     timeuseset("fft", 1);
-    printcpx(16, 1, src, 0, 0);
+    printcpx(8, 1, src, 0, 0);
     return 0;
 }
 
 int main(int argc, char **argv){
     printf("dsp start\r\n");
-    //ffttest();
-    dfttest2();
+    ffttest();
+    //dfttest2();
 #if 0
     dfttest(256);
     dfttest(1024);

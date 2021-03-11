@@ -77,8 +77,7 @@ def dft_test3():
     print(src2)
 
 def fft_test():
-    src = [complex(1,0),complex(3,0),complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),\
-    complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0),complex(2,0),complex(5,0)]
+    src = [complex(1,0),complex(3,0),complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0)]
     print(len(src), src)
     dst = fft(src)
     print(len(dst), dst)
@@ -101,5 +100,5 @@ if __name__ == "__main__":
     #iq_sim()
     #dft_test1()
     #dft_test2()
-    dft_test3()
-    #fft_test()
+    #dft_test3()
+    fft_test()
