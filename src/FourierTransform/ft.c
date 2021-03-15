@@ -87,7 +87,7 @@ void Reverse(int N, CPX *x)
     }
 }
 
-void fft(int framelen, CPX *x){
+void fft(int dir, int framelen, CPX *x){
     unsigned int i,j,k,l; 
     int N = framelen;    
     CPX top,bottom,xW;
@@ -96,7 +96,7 @@ void fft(int framelen, CPX *x){
     CPX *WN = (CPX *)calloc(N,sizeof(CPX));
     for(i=0;i<N;i++){
         WN[i].r = cos(2.0*M_PI*(double)i/(double)N);
-        WN[i].i = sin(2.0*M_PI*(double)i/(double)N) * (-1);
+        WN[i].i = sin(2.0*M_PI*(double)i/(double)N) * (-dir);
     }
     
     for(i=0;i<log2N;i++)   /*共log2N级*/
@@ -113,6 +113,14 @@ void fft(int framelen, CPX *x){
                 x[j+k+l]=bottom;
                 //printf("%d %d\r\n", j+k, j+k+l);
             }
+        }
+    }
+    
+    /*返回数据*/
+    if(dir==-1){
+        for(i=0;i<framelen;i++){
+            x[i].r=x[i].r/(double)framelen;
+            x[i].i=x[i].i/(double)framelen;
         }
     }
 }
@@ -249,9 +257,13 @@ int ffttest(void){
     int i;
     CPX src[8];
     memcpy(src, x, sizeof(src));
+    printcpx(8, 1, src, 0, 0);
     timeuseset("fft", 0);
-    fft(8, src);
+    fft(1, 8, src);
     timeuseset("fft", 1);
+    timeuseset("ifft", 0);
+    fft(-1, 8, src);
+    timeuseset("ifft", 1);
     printcpx(8, 1, src, 0, 0);
     return 0;
 }
