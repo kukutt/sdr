@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h> 
+#include <time.h>
 #include <string.h>
 
-typedef double Float64;
+typedef float MyFloat;
 
 typedef struct {
-    Float64 r;  /* 实部 */
-    Float64 i;  /* 虚部 */
+    MyFloat r;  /* 实部 */
+    MyFloat i;  /* 虚部 */
 } CPX;
 
 int printcpx(int samplerate, int time, CPX *signal, int start, int end);
@@ -28,7 +29,6 @@ int timeuseset(char *name, int flg){
     }
 }
 
-#define log2N 3 //log2N=6
 /*复数类型*/
 typedef struct
 {
@@ -63,7 +63,7 @@ CPX mul(CPX a, CPX b)
 }
 
 /***码位倒序函数***/
-void Reverse(int N, CPX *x)
+void Reverse(int N, CPX *x, int log2N)
 {
     unsigned int i,j,k;
     unsigned int t;
@@ -87,11 +87,11 @@ void Reverse(int N, CPX *x)
     }
 }
 
-void fft(int dir, int framelen, CPX *x){
+void fft(int dir, int framelen, CPX *x, int log2N){
     unsigned int i,j,k,l; 
     int N = framelen;    
     CPX top,bottom,xW;
-    Reverse(N, x); //码位倒序
+    Reverse(N, x, log2N); //码位倒序
     
     CPX *WN = (CPX *)calloc(N,sizeof(CPX));
     for(i=0;i<N;i++){
@@ -126,10 +126,13 @@ void fft(int dir, int framelen, CPX *x){
 }
 
 
-void dft(int dir, int framelen, CPX *signal, CPX *dft_s){
+void dft(int dir, int framelen, CPX *signal){
     int i,k;
     double arg;
     double cosarg,sinarg;
+    CPX *dft_s;
+
+    dft_s = (CPX *)calloc(framelen, sizeof(CPX));
 
     for(i=0;i<framelen;i++){
         arg=-dir*2.0*M_PI*(double)i/(double)framelen;
@@ -152,12 +155,16 @@ void dft(int dir, int framelen, CPX *signal, CPX *dft_s){
             dft_s[i].i=dft_s[i].i/(double)framelen;
         }
     }
+
+
+    memcpy(signal, dft_s, framelen*sizeof(CPX)); 
+    free(dft_s);
 }
 
 int printcpx(int samplerate, int time, CPX *signal, int start, int end){
     int i;
     int framelen = samplerate * time;
-    Float64 t;
+    MyFloat t;
     int s = start;
     int e = end;
     if (e == 0) e = framelen;
@@ -170,13 +177,49 @@ int printcpx(int samplerate, int time, CPX *signal, int start, int end){
 int make_cos(int samplerate, int time, int fk, CPX *signal){
     int i;
     int framelen = samplerate * time;
-    Float64 t;
+    MyFloat t;
     for (i = 0; i < framelen; i++){
-        t = (Float64)time * ((Float64)i/framelen);
+        t = (MyFloat)time * ((MyFloat)i/framelen);
         signal[i].r = cos(2*M_PI*t*fk);
         signal[i].i = 0;
     }
     return 0;
+}
+
+int make_rand(int len, CPX *signal){
+    int i = 0;
+    srand((unsigned)time(NULL));
+    for (i = 0; i < len; i++){
+        signal[i].r = ((MyFloat)(rand()%100000))/1000.0;
+        signal[i].i = ((MyFloat)(rand()%100000))/1000.0;
+    }
+}
+
+int cmpcpx(int len, CPX *a, CPX *b, MyFloat diff){
+    int ret = 0;
+    int i = 0;
+
+    for (i = 0; i < len; i++){
+        if ((fabs(a[i].r - b[i].r)) > diff){
+            printf("r [%d] %f,%f\r\n", i, a[i].r, b[i].r);
+            ret = -1;
+            break;
+        }
+        if ((fabs(a[i].i - b[i].i)) > diff){
+            printf("i [%d] %f,%f\r\n", i, a[i].i, b[i].i);
+            ret = -1;
+            break;
+        }
+    }
+#if 0
+    if (ret != 0){
+        printf("i = %d\r\n", i);
+        printcpx(len, 1, a, 0, 0);
+        printcpx(len, 1, b, 0, 0);
+    }
+#endif
+
+    return ret;
 }
 
 int save_signal(int framelen, CPX *signal, const char *filename){
@@ -188,7 +231,7 @@ int save_signal(int framelen, CPX *signal, const char *filename){
     fwrite(signal, sizeof(CPX), framelen, fp);
     fclose(fp);
 }
-
+#if 0
 int hilbert(void){
     CPX *signal;
     CPX *dft_s;
@@ -202,18 +245,18 @@ int hilbert(void){
     hdft_s=calloc(framelen,sizeof(CPX));  //  希尔伯特变换的离散 傅里叶变换
     hsignal=calloc(framelen,sizeof(CPX)); //  希尔伯特变换后信号
     
-    dft(1,framelen,signal, dft_s);  //求原始信号 傅里叶变换
+    dft(1,framelen, signal);  //求原始信号 傅里叶变换
     for(i=0;i<framelen;i++){              //求出希尔伯特变换信号的傅里叶变换
         if(i<=framelen/2){
-            hdft_s[i].r=dft_s[i].i;
-            hdft_s[i].i=-dft_s[i].r;
+            hdft_s[i].r=signal[i].i;
+            hdft_s[i].i=-signal[i].r;
         }else{
-            hdft_s[i].r=-dft_s[i].i;
-            hdft_s[i].i=dft_s[i].r;
+            hdft_s[i].r=-signal[i].i;
+            hdft_s[i].i=signal[i].r;
         }
     }                                  
 
-    dft(-1,framelen, hdft_s,hsignal);    //利用反傅里叶变换求出希尔伯特变换信号
+    dft(-1,framelen, hdft_s);    //利用反傅里叶变换求出希尔伯特变换信号
     save_signal(framelen, signal, "aaa.iq");
     save_signal(framelen, hsignal, "haa.iq");
     free(signal);
@@ -221,6 +264,7 @@ int hilbert(void){
     free(hdft_s);
     free(hsignal);
 }
+#endif
 
 int dfttest(int ss){
     CPX *signal, *dft_s;
@@ -230,7 +274,7 @@ int dfttest(int ss){
     make_cos(ss, 1, 100, signal);
     save_signal(ss, signal, "aaa.iq");
     timeuseset("dft", 0);
-    dft(1, ss, signal, dft_s);
+    dft(1, ss, signal);
     printf("ss=%d\r\n", ss);
     timeuseset("dft", 1);
     printcpx(ss, 1, dft_s, 99, 101);
@@ -243,42 +287,83 @@ CPX x[]={{1,0},{3,0},{2,0},{5,0},{8,0},{4,0},{1,0},{3,0},\
 
 int dfttest2(void){
     int i;
-    CPX dft_s[16];
-    CPX src[16];
-    memcpy(src, x, sizeof(src));
-    timeuseset("dft", 0);
-    dft(1, 16, src, dft_s);
-    timeuseset("dft", 1);
-    printcpx(16, 1, dft_s, 0, 0);
-    return 0;
-}
-
-int ffttest(void){
-    int i;
+    CPX dft_s[8];
     CPX src[8];
     memcpy(src, x, sizeof(src));
     printcpx(8, 1, src, 0, 0);
-    timeuseset("fft", 0);
-    fft(1, 8, src);
-    timeuseset("fft", 1);
-    timeuseset("ifft", 0);
-    fft(-1, 8, src);
-    timeuseset("ifft", 1);
+    timeuseset("dft", 0);
+    dft(1, 8, src);
+    timeuseset("dft", 1);
     printcpx(8, 1, src, 0, 0);
     return 0;
+}
+
+int autotest(void){
+    int i;
+    CPX *src;
+    CPX *dstfft;
+    CPX *midfft;
+    CPX *dstdft;
+    CPX *middft;
+    int dl = 4096;
+    //dl = 8;
+    int ret1 = -1, ret2 = -1, ret3 = -1;
+
+    src = (CPX *)calloc(dl,sizeof(CPX));
+    dstfft = (CPX *)calloc(dl,sizeof(CPX));
+    midfft = (CPX *)calloc(dl,sizeof(CPX));
+    dstdft = (CPX *)calloc(dl,sizeof(CPX));
+    middft = (CPX *)calloc(dl,sizeof(CPX));
+    make_rand(dl, src);
+    memcpy(dstfft, src, dl*sizeof(CPX));
+    memcpy(dstdft, src, dl*sizeof(CPX));
+
+    /* test ft */
+    timeuseset("fft", 0);
+    fft(1, dl, dstfft, (int)(log(dl)/log(2)));
+    timeuseset("fft", 1);
+    
+    timeuseset("dft", 0);
+    dft(1, dl, dstdft);
+    timeuseset("dft", 1);
+    
+    memcpy(midfft, dstfft, dl*sizeof(CPX));
+    memcpy(middft, dstdft, dl*sizeof(CPX));
+
+    /* test ift */
+    timeuseset("ifft", 0);
+    fft(-1, dl, dstfft, (int)(log(dl)/log(2)));
+    timeuseset("ifft", 1);
+    
+    timeuseset("idft", 0);
+    dft(-1, dl, dstdft);
+    timeuseset("idft", 1);
+
+    //dstfft[0].i = dstfft[0].i + 0.01;
+    printf("[src-dstfft] = %d\r\n", ret1 = cmpcpx(dl, src, dstfft, 0.01));
+    //dstdft[0].i = dstdft[0].i + 0.01;
+    printf("[src-dstdft] = %d\r\n", ret2 = cmpcpx(dl, src, dstdft, 0.01));
+    //midfft[0].i = midfft[0].i + 0.01;
+    printf("[dft-fft] = %d\r\n", ret3 = cmpcpx(dl, midfft, middft, 1));
+    
+    free(src);
+    free(dstdft);
+    free(middft);
+    free(dstfft);
+    free(midfft);
+
+    if ((ret1 != 0) || (ret2 != 0) || (ret3 != 0)){
+        printf("error\r\n");
+        return -1;
+    }else{
+        printf("ok\r\n");
+        return 0;
+    }
 }
 
 int main(int argc, char **argv){
     printf("dsp start\r\n");
-    ffttest();
-    //dfttest2();
-#if 0
-    dfttest(256);
-    dfttest(1024);
-    dfttest(2048);
-    dfttest(4096);
-    dfttest(4096+4096);
-#endif
-    //hilbert();
+    printf("CPX size =  %ld\r\n", sizeof(CPX));
+    autotest();
     return 0;
 }
