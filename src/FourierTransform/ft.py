@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import math
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 #import scipy
@@ -77,10 +78,69 @@ def dft_test3():
     print(src2)
 
 def fft_test():
-    src = [complex(1,0),complex(3,0),complex(2,0),complex(5,0),complex(8,0),complex(4,0),complex(1,0),complex(3,0)]
-    print(len(src), src)
-    dst = fft(src)
-    print(len(dst), dst)
+    for ttt in range(100):
+        try:
+            os.remove("src.cp")
+            os.remove("dst.cp")
+            print("文件删除完毕")
+        except(FileNotFoundError):
+            print("文件不存在")
+        os.system("./ft")
+
+
+        src = np.fromfile("src.cp", dtype=np.complex64) #np.int8 np.float32 np.float64
+        dstc = np.fromfile("dst.cp", dtype=np.complex64)
+        dstpy = fft(src)
+        #print(dstpy)
+        #print(dstc)
+        for i in range(len(dstc)):
+            if (np.abs(np.abs(dstc[i]) - np.abs(dstpy[i])) > 0.002):
+                print("error abs", ttt, i, np.abs(dstc[i]), np.abs(dstpy[i]))
+                os._exit(-1);
+            if (np.abs(np.angle(dstc[i]) - np.angle(dstpy[i])) > 0.001):
+                print("error angle", ttt, i, np.angle(dstc[i]) , np.angle(dstpy[i]))
+                os._exit(-1);
+
+    print("test ok\r\n")
+
+def fft_test1():
+    for ttt in range(100):
+        src = 100 * np.random.random(4096) + np.random.random(4096) * 100j
+        src = src.astype(np.complex64)
+        src.tofile("src.bin")
+        try:
+            os.remove("dst.bin")
+        except:
+            pass
+        os.system("./ft")
+        dstfft = np.fromfile("dst_fft.bin", dtype=np.complex64)
+        dstdft = np.fromfile("dst_dft.bin", dtype=np.complex64)
+        dstpy = fft(src)
+        #print(ttt, src[0], dstpy[0])
+
+        for i in range(len(dstfft)):
+            if (np.abs(np.abs(dstfft[i]) - np.abs(dstpy[i])) > 0.002):
+                print("error abs", ttt, i, np.abs(dstfft[i]), np.abs(dstpy[i]))
+                os._exit(-1);
+            if (np.abs(np.angle(dstfft[i]) - np.angle(dstpy[i])) > 0.001):
+                print("error angle", ttt, i, np.angle(dstfft[i]) , np.angle(dstpy[i]))
+                os._exit(-1);
+
+        for i in range(len(dstdft)):
+            if (np.abs(dstdft[i]) > 100):
+                difffff = 1;
+            elif (np.abs(dstdft[i]) > 1):
+                difffff = 0.1;
+            else:
+                difffff = 0.001
+            if (np.abs(np.abs(dstdft[i]) - np.abs(dstpy[i])) > difffff):
+                print("error abs", ttt, i, np.abs(dstdft[i]), np.abs(dstpy[i]))
+                os._exit(-1);
+            if (np.abs(np.angle(dstdft[i]) - np.angle(dstpy[i])) > 0.005):
+                print("error angle", ttt, i, np.angle(dstdft[i]) , np.angle(dstpy[i]))
+                os._exit(-1);
+    print("test ok\r\n")
+
 
 def iq_sim():
     filename="./haa.iq"
@@ -101,4 +161,5 @@ if __name__ == "__main__":
     #dft_test1()
     #dft_test2()
     #dft_test3()
-    fft_test()
+    #fft_test()
+    fft_test1()

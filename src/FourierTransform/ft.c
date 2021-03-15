@@ -195,20 +195,41 @@ int make_rand(int len, CPX *signal){
     }
 }
 
-int cmpcpx(int len, CPX *a, CPX *b, MyFloat diff){
+int cmpcpx(int len, CPX *a, CPX *b){
     int ret = 0;
     int i = 0;
+    MyFloat diffr,diffi;
+    MyFloat jdr=0,jdi=0;
 
     for (i = 0; i < len; i++){
-        if ((fabs(a[i].r - b[i].r)) > diff){
-            printf("r [%d] %f,%f\r\n", i, a[i].r, b[i].r);
-            ret = -1;
-            break;
+        diffr = fabs(a[i].r - b[i].r);
+        if (fabs(a[i].r) < 1){
+            jdr = 0.001;
+        }else if (fabs(a[i].r) < 100){
+            jdr = 0.1;
+        }else {
+            jdr = 1;
         }
-        if ((fabs(a[i].i - b[i].i)) > diff){
-            printf("i [%d] %f,%f\r\n", i, a[i].i, b[i].i);
+
+        if (diffr > jdr){
+            printf("r [%d] %f,%f [%f]\r\n", i, a[i].r, b[i].r, jdr);
             ret = -1;
-            break;
+            //break;
+        }
+
+        diffi = fabs(a[i].i - b[i].i);
+        if (fabs(a[i].i) < 1){
+            jdi = 0.001;
+        }else if (fabs(a[i].i) < 100){
+            jdi = 0.1;
+        }else {
+            jdi = 1;
+        }
+
+        if (diffi > jdi){
+            printf("i [%d] %f,%f [%f]\r\n", i, a[i].i, b[i].i, jdi);
+            ret = -1;
+            //break;
         }
     }
 #if 0
@@ -229,6 +250,16 @@ int save_signal(int framelen, CPX *signal, const char *filename){
         exit(0);
     }
     fwrite(signal, sizeof(CPX), framelen, fp);
+    fclose(fp);
+}
+
+int load_signal(int framelen, CPX *signal, const char *filename){
+    FILE *fp;
+    if( (fp=fopen(filename, "r")) == NULL ){  //以二进制方式打开
+        printf("Fail to open file!");
+        exit(0);
+    }
+    fread(signal, sizeof(CPX), framelen, fp);
     fclose(fp);
 }
 #if 0
@@ -307,14 +338,15 @@ int autotest(void){
     CPX *middft;
     int dl = 4096;
     //dl = 8;
-    int ret1 = -1, ret2 = -1, ret3 = -1;
+    int ret = -1, ret1 = -1, ret2 = -1, ret3 = 0;
 
     src = (CPX *)calloc(dl,sizeof(CPX));
     dstfft = (CPX *)calloc(dl,sizeof(CPX));
     midfft = (CPX *)calloc(dl,sizeof(CPX));
     dstdft = (CPX *)calloc(dl,sizeof(CPX));
     middft = (CPX *)calloc(dl,sizeof(CPX));
-    make_rand(dl, src);
+    //make_rand(dl, src);
+    load_signal(dl, src, "src.bin");
     memcpy(dstfft, src, dl*sizeof(CPX));
     memcpy(dstdft, src, dl*sizeof(CPX));
 
@@ -339,31 +371,31 @@ int autotest(void){
     dft(-1, dl, dstdft);
     timeuseset("idft", 1);
 
-    //dstfft[0].i = dstfft[0].i + 0.01;
-    printf("[src-dstfft] = %d\r\n", ret1 = cmpcpx(dl, src, dstfft, 0.01));
+    //dstfft[0].r = dstfft[0].r + 10;
+    printf("[src-dstfft] = %d\r\n", ret1 = cmpcpx(dl, src, dstfft));
     //dstdft[0].i = dstdft[0].i + 0.01;
-    printf("[src-dstdft] = %d\r\n", ret2 = cmpcpx(dl, src, dstdft, 0.01));
+    printf("[src-dstdft] = %d\r\n", ret2 = cmpcpx(dl, src, dstdft));
     //midfft[0].i = midfft[0].i + 0.01;
-    printf("[dft-fft] = %d\r\n", ret3 = cmpcpx(dl, midfft, middft, 1));
-    
+    printf("[dft-fft] = %d\r\n", cmpcpx(dl, midfft, middft));
+   
+    if ((ret1 != 0) || (ret2 != 0) || (ret3 != 0)){
+        printf("error\r\n");
+        ret = -1;
+    }else{
+        printf("ok\r\n");
+        save_signal(dl, midfft, "dst_fft.bin"); 
+        save_signal(dl, middft, "dst_dft.bin"); 
+        ret = 0;
+    }
     free(src);
     free(dstdft);
     free(middft);
     free(dstfft);
     free(midfft);
-
-    if ((ret1 != 0) || (ret2 != 0) || (ret3 != 0)){
-        printf("error\r\n");
-        return -1;
-    }else{
-        printf("ok\r\n");
-        return 0;
-    }
 }
 
 int main(int argc, char **argv){
     printf("dsp start\r\n");
-    printf("CPX size =  %ld\r\n", sizeof(CPX));
     autotest();
     return 0;
 }
