@@ -1,0 +1,26 @@
+# 源码下载
+git clone https://github.com/mossmann/hackrf.git
+git checkout v2018.01.1
+git submodule init
+git submodule update
+
+# 编译环境
+udo apt install cmake python-yaml
+wget https://launchpad.net/gcc-arm-embedded/4.9/4.9-2015-q2-update/+download/gcc-arm-none-eabi-4_9-2015q2-20150609-linux.tar.bz2
+export PATH=$PATH:$PWD/gcc-arm-none-eabi-4_9-2015q2/bin/
+
+# 编译
+
+## libopencm3
+cd firmware/libopencm3
+make
+
+## 固件
+cd firmware/hackrf_usb
+mkdir build
+cmake .. -DBOARD=HACKRF_ONE -DCMAKE_BUILD_TYPE=Release
+make
+
+# 烧录
+hackrf_spiflash -Rw hackrf_usb.bin
+
