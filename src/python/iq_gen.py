@@ -207,6 +207,20 @@ def fftlearn():
 
     print(ffta[0:10], fftp[0:10])
 
+#
+# 通过命令 hackrf_transfer -r car.iq -f 27000000 -s 8000000 -n 16000000 读iq数据
+def iq_show(filename):
+    print("filename=", filename)
+    arr= np.fromfile(filename, dtype=np.int8) #np.int8 np.float32 np.float64
+    i = arr[0::2]
+    q = arr[1::2]
+    plt.subplot(211)
+    plt.plot(i[100000:100050])
+    plt.subplot(212)
+    plt.plot(q[100000:100050])
+    plt.show()
+
+
 if __name__=="__main__":
     if (2 > len(sys.argv)):
         print("iq_see [iqfile]")
